@@ -27,6 +27,7 @@ enum machine_state_nalewanie_enum {
   go_nalewanie = 1,
   stop_ = 2
 };
+
 // ### btn tryb
 int btn_tryb_odczyt;
 int btn_tryb_stan=0;
@@ -48,7 +49,7 @@ long debounce = 200;
 
 float waga_odczyt = 0;
 float tryb_ile_nalac = 0;
-float waga_opoznienia = 50;
+float waga_opoznienia = 7;
 char waga_string[5];
 long moment_pisania = 0;
 char msg[32];
@@ -58,7 +59,8 @@ void setup() {
   
   long zero_factor = scale.read_average();     //Odczyt podstawy
 
-  Serial.begin(9600);
+  //Serial.begin(9600);
+  digitalWrite(zawor,HIGH);
   pinMode(zawor,OUTPUT);
 //  pinMode(btn_tare,INPUT_PULLUP);
   pinMode(btn_tryb, INPUT_PULLUP);
@@ -116,7 +118,7 @@ void loop() {
       // ### START ###
       if (btn_start_odczyt == LOW && btn_start_prev == HIGH && millis() - time_start > debounce) {
         machine_state_controller = go;
-        Serial.print("Start");
+        //Serial.print("Start");
         time_start = millis();    
       }
       break;
@@ -134,7 +136,7 @@ void loop() {
           if (btn_stop_odczyt == LOW && btn_stop_prev == HIGH && millis() - time_stop > debounce) {
             machine_state_nalewanie_enum = stop_;
             time_stop = millis();    
-            Serial.print("Stop_btn");
+            //Serial.print("Stop_btn");
           }
           if ( waga_odczyt > (tryb_ile_nalac - waga_opoznienia) ) {
             machine_state_nalewanie_enum = stop_;
