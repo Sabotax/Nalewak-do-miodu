@@ -5,7 +5,6 @@
 #define CLK  7          //pin 2 Arduino i wyjście CLK czujnika
 
 #define zawor A4
-//#define btn_tare -1
 #define btn_tryb 5
 #define btn_start 4
 #define btn_stop 3
@@ -49,20 +48,17 @@ long debounce = 200;
 
 float waga_odczyt = 0;
 float tryb_ile_nalac = 0;
-float waga_opoznienia = 7;
+float waga_opoznienia = 14;
 char waga_string[5];
 long moment_pisania = 0;
-char msg[32];
 void setup() {
   scale.set_scale(calibration_factor);
   scale.tare();         //Resetuje skalę na 0
   
   long zero_factor = scale.read_average();     //Odczyt podstawy
-
-  //Serial.begin(9600);
+  
   digitalWrite(zawor,HIGH);
   pinMode(zawor,OUTPUT);
-//  pinMode(btn_tare,INPUT_PULLUP);
   pinMode(btn_tryb, INPUT_PULLUP);
   pinMode(btn_start,INPUT_PULLUP);
   pinMode(btn_stop,INPUT_PULLUP);
@@ -110,15 +106,12 @@ void loop() {
         lcd.setCursor(0,0);
         lcd.print("Parametr:       ");
         lcd.setCursor(0,0);
-        //sscanf(msg,"Parametr:"+%3f "g",(tryb_ile_nalac/1000));
         lcd.print("Parametr:"+ String(tryb_ile_nalac)+"g");
-        lcd.print(msg);
       }
 
       // ### START ###
       if (btn_start_odczyt == LOW && btn_start_prev == HIGH && millis() - time_start > debounce) {
         machine_state_controller = go;
-        //Serial.print("Start");
         time_start = millis();    
       }
       break;
@@ -136,7 +129,6 @@ void loop() {
           if (btn_stop_odczyt == LOW && btn_stop_prev == HIGH && millis() - time_stop > debounce) {
             machine_state_nalewanie_enum = stop_;
             time_stop = millis();    
-            //Serial.print("Stop_btn");
           }
           if ( waga_odczyt > (tryb_ile_nalac - waga_opoznienia) ) {
             machine_state_nalewanie_enum = stop_;

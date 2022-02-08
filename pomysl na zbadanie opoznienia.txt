@@ -1,0 +1,10 @@
+główny pojemnik niech ma np 15L miodu i wtedy nalać tyle ile ma być docelowo g w słoiku np 1200
+
+mierzyć cały przebieg dzięki czemu będzie funkcja liniowa, oprócz zbadanego opóźnienia, zbadamy też wsp kierunkowy funkcji
+następnie powtórzyć pomiary dla 14L,13L itp
+i dla nich też wyznaczyć współczynniki kierunkowe i wagę miodu opóźnionego (po odcięciu zaworu)
+z tych danych można zrobić 2 zbiory danych (albo w sumie 1 starczy, waga opóźnionego) a nich aproksymacje funkcji
+
+waga_opoznienia = f(L w zbiorniku)
+
+być może da się wpleść pomiar stężenia wody w miodzie dla szacunku gęstości
