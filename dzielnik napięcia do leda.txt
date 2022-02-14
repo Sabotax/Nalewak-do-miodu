@@ -1,0 +1,3 @@
+od zasilania 1K
+od gnd 220
+sprawdzone
