@@ -1,15 +1,24 @@
 #include "HX711.h"
 #include <LiquidCrystal.h>
 #include <stdio.h>
-#define DOUT  2       //pin 3 Arduino i wyjście DAT czujnika
-#define CLK  7          //pin 2 Arduino i wyjście CLK czujnika
+//#define DOUT  2       //pin 3 Arduino i wyjście DAT czujnika
+//#define CLK  3          //pin 2 Arduino i wyjście CLK czujnika
+//
+//#define zawor 4
+//#define btn_start 7
+//#define btn_stop 6
+//
+//LiquidCrystal lcd(14,15,16,17,18,19);
 
-#define zawor A4
-#define btn_start 4
-#define btn_stop 3
-#define led_zawor 6
+#define DOUT  2       //pin 3 Arduino i wyjście DAT czujnika
+#define CLK  3          //pin 2 Arduino i wyjście CLK czujnika
+
+#define zawor 7
+#define btn_start 5
+#define btn_stop 6
 
 LiquidCrystal lcd(8,9,10,11,12,13);
+
 HX711 scale(DOUT, CLK);
  
 float calibration_factor = 416600;     //współczynnik kalibracji
@@ -30,23 +39,23 @@ enum machine_state_nalewanie_enum {
 
 // ## btn start
 int btn_start_odczyt;
-int btn_start_prev=LOW;
+int btn_start_prev=HIGH;
 bool btn_start_changed=false;
 long time_start = 0;
 // ## btn stop
 int btn_stop_odczyt;
-int btn_stop_prev=LOW;
+int btn_stop_prev=HIGH;
 bool btn_stop_changed=false;
 long time_stop = 0;
 
 long debounce = 200;
 
 float waga_odczyt = 0;
-float y_ref = 500;
-float waga_opoznienia = 30;
+int y_ref = 0;
+int waga_opoznienia = 30;
 char waga_string[5];
 long moment_pisania = 0;
-bool change_y_ref_opoznienie = false;
+bool change_y_ref_opoznienie = true;
 
 class Communication {
 public:
@@ -61,12 +70,12 @@ public:
       return;
     }
 
-    Serial.println(bufor);
+    //Serial.println(bufor);
     bufor.toCharArray(temp,50);
-    if( bufor[0] == 'u') {
+    if( bufor[0] == 'y') {
       // ustawianie y_ref
       sscanf(temp,"%c%d;",&temp2,&y_ref);
-      Serial.println("Ustawiam y_ref na" + String(y_ref));
+      Serial.println("Ustawiam y_ref na " + String(y_ref));
       change_y_ref_opoznienie = true;
     }
     else if (bufor[0] == 'o') {
@@ -77,17 +86,12 @@ public:
     }
     else {
       // start lub stop
-      if(bufor == "start") {
-        aktualne_polecenie = 1;
-        order_came=true;
-      }
-      if(bufor == "stop") {
-        aktualne_polecenie = 0;
-        order_came=true;
-      }
       if(bufor == "tare") {
         aktualne_polecenie = 2;
         order_came=true;
+      }
+      if(bufor == "stats") {
+        Serial.println("Obecne ustawienia: Yref="+String(y_ref)+" Opoznienie="+String(waga_opoznienia));
       }
     }
     return;
@@ -103,11 +107,11 @@ void setup() {
   
   long zero_factor = scale.read_average();     //Odczyt podstawy
   
-  digitalWrite(zawor,HIGH);
+  //digitalWrite(zawor,HIGH);
   pinMode(zawor,OUTPUT);
   pinMode(btn_start,INPUT_PULLUP);
   pinMode(btn_stop,INPUT_PULLUP);
-  pinMode(led_zawor,OUTPUT);
+  pinMode(LED_BUILTIN,OUTPUT);
 
   lcd.begin(16,2);
   lcd.setCursor(0,0);
@@ -116,7 +120,7 @@ void setup() {
   lcd.print("Daniel Rozycki");
   delay(3000);
   lcd.clear();
-  Serial.println("Regulacja trójpołożeniowa - start");
+  Serial.println("Nalewak - start");
 }
 
 void loop() {
@@ -126,7 +130,7 @@ void loop() {
 
   // led
   waga_odczyt = (int) (scale.get_units()*1000);
-  if(millis() - moment_pisania > 500) {
+  if(millis() - moment_pisania > 300) {
     lcd.setCursor(0,1);
     lcd.print("Odczyt:         ");
     lcd.setCursor(0,1);
@@ -135,10 +139,18 @@ void loop() {
     moment_pisania = millis();
   }
 
+  // debug
+  if( digitalRead(btn_start) == LOW || digitalRead(btn_stop) == LOW) {
+    digitalWrite(LED_BUILTIN,HIGH);
+  }
+  else {
+    digitalWrite(LED_BUILTIN,LOW);
+  }
+
   if(change_y_ref_opoznienie) {
     change_y_ref_opoznienie = false;
     lcd.setCursor(0,0);
-    lcd.print("Yr:      O:     ");
+    lcd.print("                ");
     lcd.setCursor(0,0);
     lcd.print("Yr:"+String(y_ref)+"O:"+String(waga_opoznienia));
   }
@@ -165,9 +177,7 @@ void loop() {
     case go:
       switch(machine_state_nalewanie_enum) {
         case start:
-          digitalWrite(led_zawor,HIGH);
-          digitalWrite(zawor,LOW);
-
+          digitalWrite(zawor,HIGH);
           scale.tare();
           
           machine_state_nalewanie_enum = go_nalewanie;
@@ -182,8 +192,7 @@ void loop() {
           }
           break;
         case stop_:
-          digitalWrite(led_zawor,LOW);
-          digitalWrite(zawor,HIGH);
+          digitalWrite(zawor,LOW);
           machine_state_nalewanie_enum = start;
           machine_state_controller = hold;
           break;
