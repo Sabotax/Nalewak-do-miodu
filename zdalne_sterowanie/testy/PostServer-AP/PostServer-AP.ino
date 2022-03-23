@@ -1,7 +1,6 @@
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
-#include <ESP8266mDNS.h>
 
 #ifndef STASSID
 #define WIFI_SSID       "Nalewak"
@@ -11,7 +10,6 @@ const char* ssid     = WIFI_SSID;
 
 ESP8266WebServer server(80);
 
-const int led = LED_BUILTIN;
 /*
 const String postForms = "<html>\
   <head>\
@@ -115,7 +113,6 @@ void handleForm() {
 }
 */
 void handleNotFound() {
-  digitalWrite(led, 1);
   String message = "File Not Found\n\n";
   message += "URI: ";
   message += server.uri();
@@ -128,12 +125,11 @@ void handleNotFound() {
     message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
   }
   server.send(404, "text/plain", message);
-  digitalWrite(led, 0);
 }
 
 void setup(void) {
-  pinMode(led, OUTPUT);
   Serial.begin(38400);
+  Serial.println("Zaczynam");
   /* example
    *    Serial.print("Setting soft-AP configuration ... ");
   Serial.println(WiFi.softAPConfig(local_IP, gateway, subnet) ? "Ready" : "Failed!");
@@ -145,9 +141,10 @@ void setup(void) {
   Serial.println(WiFi.softAPIP());
    */
   WiFi.softAP(ssid);
-
+  IPAddress myIP = WiFi.softAPIP();
+  Serial.println("AP stworzone");
   server.on("/", handleRoot);
-
+  
   //server.on("/postform/", handleForm);
   // mozna tez chyba uzyc .on z 3 argumentami, gdzie srodkowy to method, moze to lepiej zamiast if else if w root
   // https://links2004.github.io/Arduino/d3/d58/class_e_s_p8266_web_server.html
