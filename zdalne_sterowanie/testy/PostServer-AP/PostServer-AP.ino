@@ -3,7 +3,7 @@
 #include <ESP8266WebServer.h>
 
 #ifndef STASSID
-#define WIFI_SSID       "Nalewak"
+#define WIFI_SSID "Nalewak"
 #endif
 
 const char* ssid     = WIFI_SSID;
@@ -28,7 +28,7 @@ const String postForms = "<html>\
   </body>\
 </html>";
 */
-const String postForms = "<html>\
+const String odp_root = "<html>\
   <head>\
     <title>Nalewak zarzadzanie</title>\
     <style>\
@@ -37,14 +37,25 @@ const String postForms = "<html>\
   </head>\
   <body>\
     <h1>Ustaw wartosci:</h1><br>\
-    <form method=\"post\" enctype=\"application/x-www-form-urlencoded\" action=\"/\">\
-      <input type=\"number\" name=\"waga\" placeholder=\"Zadane\"><br>\
-      <input type=\"number\" name=\"opoznienie\" placeholder=\"Opoznienie\"><br>\
+    <form method=\"post\" enctype=\"application/x-www-form-urlencoded\" action=\"/set\">\
+      Y_ref: <input type=\"number\" name=\"waga\" placeholder=\"1000\"><br>\
+      Opoznienie: <input type=\"number\" name=\"opoznienie\" placeholder=\"30\"><br>\
+      <input type=\"submit\" value=\"Submit\">\
+    </form>\
+    <hr>\
+    <h1>Ustaw wspolczynnik kalibracji:</h1><br>\
+    <form method=\"post\" enctype=\"application/x-www-form-urlencoded\" action=\"/calib\">\
+      Wspolczynnik kalibracji: <input type=\"number\" name=\"factor\"><br>\
+      <input type=\"submit\" value=\"Submit\">\
+    </form>\
+    <hr>\
+    <h1>Pokaz wspolczynnik kalibracji</h1><br>\
+    <form method=\"post\" enctype=\"application/x-www-form-urlencoded\" action=\"/show\">\
       <input type=\"submit\" value=\"Submit\">\
     </form>\
   </body>\
 </html>";
-const String postForms2 = "<html>\
+const String odp1 = "<html>\
   <head>\
     <title>Nalewak zarzadzanie</title>\
     <style>\
@@ -52,31 +63,54 @@ const String postForms2 = "<html>\
     </style>\
   </head>\
   <body>\
-    <h1>Udalo sie ustawic wartosci pomyslnie</h1>\
-    <h1>Ustaw wartosci:</h1><br>\
-    <form method=\"post\" enctype=\"application/x-www-form-urlencoded\" action=\"/\">\
-      <input type=\"number\" name=\"waga\" placeholder=\"Zadane\"><br>\
-      <input type=\"number\" name=\"opoznienie\" placeholder=\"Opoznienie\"><br>\
-      <input type=\"submit\" value=\"Submit\">\
-    </form>\
+    <a href=\"/\" >Informacje do zmiany parametrow y_ref i opoznienie wyslano - nacisnij by wrocic na glowna strone</a>\
   </body>\
 </html>";
-
+const String odp2 = "<html>\
+  <head>\
+    <title>Nalewak zarzadzanie</title>\
+    <style>\
+      body { background-color: #cccccc; font-family: Arial, Helvetica, Sans-Serif; Color: #000088; }\
+    </style>\
+  </head>\
+  <body>\
+    <a href=\"/\" >Informacje do zmiany parametru wspolczynnika kalibracji wyslano - nacisnij by wrocic na glowna strone</a>\
+  </body>\
+</html>";
+const String odp3 = "<html>\
+  <head>\
+    <title>Nalewak zarzadzanie</title>\
+    <style>\
+      body { background-color: #cccccc; font-family: Arial, Helvetica, Sans-Serif; Color: #000088; }\
+    </style>\
+  </head>\
+  <body>\
+    <a href=\"/\" >Informacje do pokazania wsp kalibracji wyslano - nacisnij by wrocic na glowna strone</a>\
+  </body>\
+</html>";
 void handleRoot() {
   if( server.method() == 1 ) {
-    server.send(200, "text/html", postForms);
-  }
-  else if ( server.method() == 3 ) {
-    server.send(200, "text/html", postForms2);
-    Serial.print("y"+server.arg(0) + ";");
-    delay(500);
-    Serial.print("o"+server.arg(1) + ";");
+    server.send(200, "text/html", odp_root);
   }
   else {
     server.send(200, "text/html", "oops"+server.method() );
   }
   
   // TODO czy da sie glowny form zrobic zeby odsylal tu i go odpowiednio ogarnac
+}
+void handleSet() {
+  server.send(200, "text/html", odp1);
+  Serial.print("y"+server.arg(0) + ";");
+  delay(50);
+  Serial.print("o"+server.arg(1) + ";");
+}
+void handleCalib() {
+  server.send(200, "text/html", odp2);
+  Serial.print("s"+server.arg(0) + ";");
+}
+void handleShow() {
+  server.send(200, "text/html", odp3);
+  Serial.print("c;");
 }
 /*
 void handlePlain() {
@@ -144,6 +178,9 @@ void setup(void) {
   IPAddress myIP = WiFi.softAPIP();
   Serial.println("AP stworzone");
   server.on("/", handleRoot);
+  server.on("/show",HTTP_POST, handleShow);
+  server.on("/calib",HTTP_POST, handleCalib);
+  server.on("/set",HTTP_POST, handleSet);
   
   //server.on("/postform/", handleForm);
   // mozna tez chyba uzyc .on z 3 argumentami, gdzie srodkowy to method, moze to lepiej zamiast if else if w root

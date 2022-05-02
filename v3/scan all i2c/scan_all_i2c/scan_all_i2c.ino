@@ -3,7 +3,7 @@
 uint8_t i2cPins[][2] = {
   {D2, D1}, // Standardowe piny I2C
   {D5, D6},
-  {D0, D1}
+  {D1, D0}
 };
 
 void setup()

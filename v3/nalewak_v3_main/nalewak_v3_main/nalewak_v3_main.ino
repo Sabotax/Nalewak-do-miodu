@@ -4,7 +4,7 @@
 #include <LiquidCrystal_I2C.h>
 #include <SoftwareSerial.h>
 
-#define DOUT  2       //pin 3 Arduino i wyjście DAT czujnika
+#define DOUT  2      //pin 3 Arduino i wyjście DAT czujnika
 #define CLK  3          //pin 2 Arduino i wyjście CLK czujnika
 
 #define zawor 4
@@ -17,7 +17,7 @@ HX711 scale(DOUT, CLK);
 
 SoftwareSerial Serial_ESP(A1,A0); // A1 RX | A0 TX
  
-float calibration_factor = 416600;     //współczynnik kalibracji
+float calibration_factor = 409910;     //współczynnik kalibracji
 
 int machine_state_controller = 0;
 int machine_state_nalewanie_enum = 0;
@@ -43,13 +43,16 @@ bool btn_stop_changed=false;
 long time_stop = 0;
 
 long debounce = 200;
-
+boolean DEBUG = true;
 float waga_odczyt = 0;
-int y_ref = 0;
+int y_ref = 1000;
 int waga_opoznienia = 30;
 char waga_string[5];
 long moment_pisania = 0;
 bool change_y_ref_opoznienie = true;
+bool show_calib_factor = false;
+long show_calib_factor_time = 0;
+int temp_factor;
 
 class Communication {
 public:
@@ -78,14 +81,23 @@ public:
       Serial.println("Opoznienie: " + String(waga_opoznienia));
       change_y_ref_opoznienie = true;
     }
+    else if (bufor[0] == 's') {
+      //set calibration factor
+      sscanf(temp,"%c%d;",&temp2,(long) &calibration_factor);
+      Serial.println("Calib_factor: " + String(calibration_factor));
+      show_calib_factor_time = millis();
+      show_calib_factor = true;
+    }
+    else if (bufor[0] == 'c') {
+      //show calibration factor
+      show_calib_factor_time = millis();
+      show_calib_factor = true;
+    }
     else {
       // start lub stop
       if(bufor == "tare") {
         aktualne_polecenie = 2;
         order_came=true;
-      }
-      if(bufor == "stats") {
-        Serial.println("Obecne ustawienia: Yref="+String(y_ref)+" Opoznienie="+String(waga_opoznienia));
       }
     }
     return;
@@ -136,7 +148,7 @@ void loop() {
     moment_pisania = millis();
   }
 
-  // debug
+//  // debug
   if( digitalRead(btn_start) == LOW || digitalRead(btn_stop) == LOW) {
     digitalWrite(LED_BUILTIN,HIGH);
   }
@@ -144,7 +156,17 @@ void loop() {
     digitalWrite(LED_BUILTIN,LOW);
   }
 
-  if(change_y_ref_opoznienie) {
+  if(show_calib_factor) {
+    lcd.setCursor(0,0);
+    lcd.print("                ");
+    lcd.setCursor(0,0);
+    lcd.print("Kalib:"+String(calibration_factor));
+    if( millis() + 20000 > show_calib_factor_time ) {
+      show_calib_factor = false;
+      change_y_ref_opoznienie = true;
+    }
+  }
+  else if(change_y_ref_opoznienie) {
     change_y_ref_opoznienie = false;
     lcd.setCursor(0,0);
     lcd.print("                ");
@@ -176,7 +198,7 @@ void loop() {
         case start:
           digitalWrite(zawor,HIGH);
           scale.tare();
-          
+          if (DEBUG) Serial.println("Rozpoczynam nalewanie");
           machine_state_nalewanie_enum = go_nalewanie;
           break;
         case go_nalewanie:
@@ -192,6 +214,7 @@ void loop() {
           digitalWrite(zawor,LOW);
           machine_state_nalewanie_enum = start;
           machine_state_controller = hold;
+          if (DEBUG) Serial.println("Kończę nalewanie");
           break;
       }
       break;
