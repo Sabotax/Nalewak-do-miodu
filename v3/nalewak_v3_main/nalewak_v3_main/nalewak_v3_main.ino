@@ -115,7 +115,7 @@ void setup() {
   
   long zero_factor = scale.read_average();     //Odczyt podstawy
   
-  //digitalWrite(zawor,HIGH);
+  digitalWrite(zawor,HIGH);
   pinMode(zawor,OUTPUT);
   pinMode(btn_start,INPUT_PULLUP);
   pinMode(btn_stop,INPUT_PULLUP);
@@ -133,13 +133,10 @@ void setup() {
 }
 
 void loop() {
-  //btn
-  btn_start_odczyt = digitalRead(btn_start);
-  btn_stop_odczyt = digitalRead(btn_stop);
-
   // led
   waga_odczyt = (int) (scale.get_units()*1000);
   if(millis() - moment_pisania > 300) {
+    waga_odczyt = (int) (scale.get_units()*1000);
     lcd.setCursor(0,1);
     lcd.print("Odczyt:         ");
     lcd.setCursor(0,1);
@@ -148,7 +145,7 @@ void loop() {
     moment_pisania = millis();
   }
 
-//  // debug
+// debug
   if( digitalRead(btn_start) == LOW || digitalRead(btn_stop) == LOW) {
     digitalWrite(LED_BUILTIN,HIGH);
   }
@@ -156,17 +153,7 @@ void loop() {
     digitalWrite(LED_BUILTIN,LOW);
   }
 
-  if(show_calib_factor) {
-    lcd.setCursor(0,0);
-    lcd.print("                ");
-    lcd.setCursor(0,0);
-    lcd.print("Kalib:"+String(calibration_factor));
-    if( millis() + 20000 > show_calib_factor_time ) {
-      show_calib_factor = false;
-      change_y_ref_opoznienie = true;
-    }
-  }
-  else if(change_y_ref_opoznienie) {
+  if(change_y_ref_opoznienie) {
     change_y_ref_opoznienie = false;
     lcd.setCursor(0,0);
     lcd.print("                ");
@@ -177,41 +164,37 @@ void loop() {
   Communication_ob.bufor = Serial_ESP.readStringUntil(';');
   Communication_ob.interpret();
   
-  if(Communication_ob.order_came && Communication_ob.aktualne_polecenie==2) {
-    Communication_ob.order_came = false;
-    scale.tare();
-    Serial.println("Taruje wage");
-  }
+//  if(Communication_ob.order_came && Communication_ob.aktualne_polecenie==2) {
+//    Communication_ob.order_came = false;
+//    scale.tare();
+//    if (DEBUG) Serial.println("Taruje wage");
+//  }
   
   switch(machine_state_controller) {
     case hold:
-    // #### TRYB ###
-
       // ### START ###
-      if (btn_start_odczyt == LOW && btn_start_prev == HIGH && millis() - time_start > debounce) {
-        machine_state_controller = go;
-        time_start = millis();    
+      if (digitalRead(btn_start) == LOW ) {
+        machine_state_controller = go;   
       }
       break;
     case go:
       switch(machine_state_nalewanie_enum) {
         case start:
-          digitalWrite(zawor,HIGH);
+          digitalWrite(zawor,LOW);
           scale.tare();
           if (DEBUG) Serial.println("Rozpoczynam nalewanie");
           machine_state_nalewanie_enum = go_nalewanie;
           break;
         case go_nalewanie:
-          if (btn_stop_odczyt == LOW && btn_stop_prev == HIGH && millis() - time_stop > debounce) {
-            machine_state_nalewanie_enum = stop_;
-            time_stop = millis();    
+          if (digitalRead(btn_stop) == LOW) {
+            machine_state_nalewanie_enum = stop_;   
           }
           if ( waga_odczyt > (y_ref - waga_opoznienia) ) {
             machine_state_nalewanie_enum = stop_;
           }
           break;
         case stop_:
-          digitalWrite(zawor,LOW);
+          digitalWrite(zawor,HIGH);
           machine_state_nalewanie_enum = start;
           machine_state_controller = hold;
           if (DEBUG) Serial.println("Kończę nalewanie");
@@ -221,8 +204,4 @@ void loop() {
 
 
   }
-
-  // btn
-  btn_start_prev = btn_start_odczyt;
-  btn_stop_prev = btn_stop_odczyt;
 }
