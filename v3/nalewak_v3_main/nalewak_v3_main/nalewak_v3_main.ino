@@ -135,15 +135,7 @@ void setup() {
 void loop() {
   // led
   waga_odczyt = (int) (scale.get_units()*1000);
-  if(millis() - moment_pisania > 300) {
-    waga_odczyt = (int) (scale.get_units()*1000);
-    lcd.setCursor(0,1);
-    lcd.print("Odczyt:         ");
-    lcd.setCursor(0,1);
-    lcd.print("Odczyt:"+String(waga_odczyt)+"g");
-  
-    moment_pisania = millis();
-  }
+
 
 // debug
   if( digitalRead(btn_start) == LOW || digitalRead(btn_stop) == LOW) {
@@ -201,7 +193,15 @@ void loop() {
           break;
       }
       break;
+  }
 
-
+  if(millis() - moment_pisania > 300) {
+    waga_odczyt = (int) (scale.get_units()*1000);
+    lcd.setCursor(0,1);
+    lcd.print("Odczyt:         ");
+    lcd.setCursor(0,1);
+    lcd.print("Odczyt:"+String(waga_odczyt)+"g");
+  
+    moment_pisania = millis();
   }
 }
