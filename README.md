@@ -11,5 +11,5 @@ Parametry to:
 -opóźnienie (łączna aproksymacja wielu czynników na nie się składających jak opóźnienie zaworu itp) (w przyszłości planowana realizacja funkcji aproksymującej opóźnienie zależnie od początkowej objętości miodu w głównym zbiorniku (wpływ na ciśnienie, a więc prędkość) oraz zawartości wody w miodzie (możliwa korelacja z gęstością))  
 
 ![zdj ukladu nie w akcji](/v3/zdj_real.jpg?raw=true "Płytka")
-
+Krótki filmik poglądowy:  
 [![Krótki filmik](https://img.youtube.com/vi/IhbymXbywFY/default.jpg)](https://youtu.be/IhbymXbywFY)
